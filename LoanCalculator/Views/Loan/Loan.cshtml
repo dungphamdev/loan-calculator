@@ -1,0 +1,61 @@
+﻿@model LoanCalculator.Models.LoanViewModel
+
+@{
+    ViewData["Title"] = "Công cụ tính lãi vay";
+}
+
+<h2>Công cụ tính lãi vay</h2>
+
+<form method="post" asp-controller="Loan" asp-action="Loan">
+    <div class="form-group">
+        <label>Số tiền vay (VNĐ)</label>
+        <input asp-for="LoanAmount" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label>Thời gian vay (tháng)</label>
+        <input asp-for="LoanTermMonths" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label>Lãi suất (% mỗi năm)</label>
+        <input asp-for="AnnualInterestRate" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label>Hình thức trả nợ</label>
+        <select asp-for="RepaymentType" class="form-control">
+            <option value="">-- Chọn hình thức --</option>
+            <option value="EqualPrincipal">Dư nợ giảm dần</option>
+            <option value="Annuity">Trả góp đều (annuity)</option>
+        </select>
+    </div>
+    <br />
+    <button type="submit" class="btn btn-primary">Tính toán</button>
+</form>
+
+@if (Model.RepaymentSchedule != null && Model.RepaymentSchedule.Any())
+{
+    <hr />
+    <h4>Bảng chi tiết thanh toán</h4>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Tháng</th>
+                <th>Tiền gốc</th>
+                <th>Tiền lãi</th>
+                <th>Tổng thanh toán</th>
+                <th>Dư nợ còn lại</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.RepaymentSchedule)
+            {
+                <tr>
+                    <td>@item.Month</td>
+                    <td>@item.Principal.ToString("N0")</td>
+                    <td>@item.Interest.ToString("N0")</td>
+                    <td>@item.TotalPayment.ToString("N0")</td>
+                    <td>@item.RemainingBalance.ToString("N0")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
