@@ -15,7 +15,7 @@ WORKDIR /app
 COPY --from=build /app/publish .
 
 # Expose port
-EXPOSE 80
+EXPOSE 8080
 
 # Start the app
 ENTRYPOINT ["dotnet", "LoanCalculator.dll"]
