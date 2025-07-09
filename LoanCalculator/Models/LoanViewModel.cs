@@ -23,6 +23,11 @@ namespace LoanCalculator.Models
         [Display(Name = "Hình thức trả nợ")]
         public string RepaymentType { get; set; }
 
+        [Required(ErrorMessage = "Vui lòng chọn ngày bắt đầu")]
+        [DataType(DataType.Date)]
+        [Display(Name = "Ngày bắt đầu thanh toán")]
+        public DateTime? StartDate { get; set; }
+
         public List<RepaymentDetail>? RepaymentSchedule { get; set; }
     }
 

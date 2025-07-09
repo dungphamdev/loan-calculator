@@ -1,9 +1,38 @@
-﻿@model LoanCalculator.Models.LoanViewModel
+﻿@* @model LoanCalculator.Models.LoanViewModel
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 
 @{
     ViewData["Title"] = "Công cụ tính lãi vay";
 }
+
+<style>
+    /* Only apply to repayment schedule tables */
+    table.table td,
+    table.table th {
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+    .table-container {
+        max-height: 400px;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+    }
+
+    .repayment-table thead th {
+        position: sticky;
+        top: 0;
+        background-color: #f8f9fa; /* Match Bootstrap .table-light */
+        z-index: 2;
+    }
+
+    .repayment-table td,
+    .repayment-table th {
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+</style>
 
 <h2 class="mb-4">Công cụ tính lãi vay</h2>
 
@@ -14,6 +43,12 @@
         <label asp-for="LoanAmount"></label>
         <input asp-for="LoanAmount" class="form-control text-end autonumeric" placeholder="Ví dụ: 1,000,000" />
         <span asp-validation-for="LoanAmount" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="StartDate"></label>
+        <input asp-for="StartDate" type="date" class="form-control" />
+        <span asp-validation-for="StartDate" class="text-danger"></span>
     </div>
 
     <div class="form-group mb-3">
@@ -43,31 +78,50 @@
 
 @if (Model.RepaymentSchedule != null && Model.RepaymentSchedule.Any())
 {
+    var totalPrincipal = Model.RepaymentSchedule.Sum(x => x.Principal);
+    var totalInterest = Model.RepaymentSchedule.Sum(x => x.Interest);
+    var totalPayment = Model.RepaymentSchedule.Sum(x => x.TotalPayment);
+
     <hr />
     <h4>Bảng chi tiết thanh toán</h4>
-    <table class="table table-bordered table-sm">
-        <thead class="table-light">
-            <tr>
-                <th>Tháng</th>
-                <th>Tiền gốc</th>
-                <th>Tiền lãi</th>
-                <th>Tổng thanh toán</th>
-                <th>Dư nợ còn lại</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model.RepaymentSchedule)
-            {
-                <tr>
-                    <td>@item.Month</td>
-                    <td>@item.Principal.ToString("N0", new System.Globalization.CultureInfo("en-US"))</td>
-                    <td>@item.Interest.ToString("N0", new System.Globalization.CultureInfo("en-US"))</td>
-                    <td>@item.TotalPayment.ToString("N0", new System.Globalization.CultureInfo("en-US"))</td>
-                    <td>@item.RemainingBalance.ToString("N0", new System.Globalization.CultureInfo("en-US"))</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+
+    <div style="max-height: 800px; overflow-y: auto;">
+        <div class="table-container">
+            <table class="table table-bordered table-sm repayment-table">
+                <thead>
+                    <tr>
+                        <th>Tháng</th>
+                        <th>Tiền gốc</th>
+                        <th>Tiền lãi</th>
+                        <th>Tổng thanh toán</th>
+                        <th>Dư nợ còn lại</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.RepaymentSchedule)
+                    {
+                        <tr>
+                            <td>@item.Month</td>
+                            <td>@item.Principal.ToString("N0", new System.Globalization.CultureInfo("vi-VN")) ₫</td>
+                            <td>@item.Interest.ToString("N0", new System.Globalization.CultureInfo("vi-VN")) ₫</td>
+                            <td>@item.TotalPayment.ToString("N0", new System.Globalization.CultureInfo("vi-VN")) ₫</td>
+                            <td>@item.RemainingBalance.ToString("N0", new System.Globalization.CultureInfo("vi-VN")) ₫</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot class="table-light fw-bold">
+                    <tr>
+                        <td>Tổng</td>
+                        <td>@totalPrincipal.ToString("N0", new System.Globalization.CultureInfo("vi-VN")) ₫</td>
+                        <td>@totalInterest.ToString("N0", new System.Globalization.CultureInfo("vi-VN")) ₫</td>
+                        <td>@totalPayment.ToString("N0", new System.Globalization.CultureInfo("vi-VN")) ₫</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+    </div>
 }
 
 @section Scripts {
@@ -97,6 +151,164 @@
         });
 
         // Init AutoNumeric for AnnualInterestRate
+        new AutoNumeric('.autonumeric-decimal', {
+            digitGroupSeparator: '',
+            decimalCharacter: '.',
+            decimalPlaces: 2,
+            unformatOnSubmit: true
+        });
+    </script>
+}
+ *@
+
+
+@model LoanCalculator.Models.LoanViewModel
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@{
+    ViewData["Title"] = "Công cụ tính lãi vay";
+}
+
+<style>
+    table.table td,
+    table.table th {
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+    .table-container {
+        max-height: 400px;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+    }
+
+    .repayment-table thead th {
+        position: sticky;
+        top: 0;
+        background-color: #f8f9fa;
+        z-index: 2;
+    }
+
+    .repayment-table td,
+    .repayment-table th {
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+</style>
+
+<h2 class="mb-4">Công cụ tính lãi vay</h2>
+
+<form method="post" asp-controller="Loan" asp-action="Loan">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    @* TODO: change to monthly picker *@
+    <div class="form-group mb-3">
+        <label asp-for="StartDate"></label>
+        <input asp-for="StartDate" type="month" class="form-control" />
+        <span asp-validation-for="StartDate" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="LoanAmount"></label>
+        <input asp-for="LoanAmount" class="form-control text-end autonumeric" placeholder="Ví dụ: 1,000,000" />
+        <span asp-validation-for="LoanAmount" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="LoanTermMonths"></label>
+        <input asp-for="LoanTermMonths" type="number" class="form-control text-end" placeholder="Số tháng vay" />
+        <span asp-validation-for="LoanTermMonths" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="AnnualInterestRate"></label>
+        <input asp-for="AnnualInterestRate" class="form-control text-end autonumeric-decimal" placeholder="Ví dụ: 8.5" />
+        <span asp-validation-for="AnnualInterestRate" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-4">
+        <label asp-for="RepaymentType"></label>
+        <select asp-for="RepaymentType" class="form-control">
+            <option value="">-- Chọn hình thức --</option>
+            <option value="EqualPrincipal">Dư nợ giảm dần</option>
+            <option value="Annuity">Trả góp đều (Annuity)</option>
+        </select>
+        <span asp-validation-for="RepaymentType" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Tính toán</button>
+</form>
+
+@if (Model.RepaymentSchedule != null && Model.RepaymentSchedule.Any())
+{
+    var totalPrincipal = Model.RepaymentSchedule.Sum(x => x.Principal);
+    var totalInterest = Model.RepaymentSchedule.Sum(x => x.Interest);
+    var totalPayment = Model.RepaymentSchedule.Sum(x => x.TotalPayment);
+
+    <hr />
+    <h4>Bảng chi tiết thanh toán</h4>
+
+    <div class="table-container">
+        <table class="table table-bordered table-sm repayment-table">
+            <thead>
+                <tr>
+                    <th>Ngày</th>
+                    <th>Số tiền gốc phải trả</th>
+                    <th>Tiền gốc</th>
+                    <th>Tiền lãi</th>
+                    <th>Tổng thanh toán</th>
+                    <th>Dư nợ còn lại</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.RepaymentSchedule)
+                {
+                    <tr>
+                        <td>@item.Date.ToString("MM/yyyy")</td>
+                        <td>@item.Principal.ToString("N0", new System.Globalization.CultureInfo("vi-VN")) ₫</td>
+                        <td>@item.Principal.ToString("N0", new System.Globalization.CultureInfo("vi-VN")) ₫</td>
+                        <td>@item.Interest.ToString("N0", new System.Globalization.CultureInfo("vi-VN")) ₫</td>
+                        <td>@item.TotalPayment.ToString("N0", new System.Globalization.CultureInfo("vi-VN")) ₫</td>
+                        <td>@item.RemainingBalance.ToString("N0", new System.Globalization.CultureInfo("vi-VN")) ₫</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot class="table-light fw-bold">
+                <tr>
+                    <td>Tổng</td>
+                    <td>@totalPrincipal.ToString("N0", new System.Globalization.CultureInfo("vi-VN")) ₫</td>
+                    <td>@totalPrincipal.ToString("N0", new System.Globalization.CultureInfo("vi-VN")) ₫</td>
+                    <td>@totalInterest.ToString("N0", new System.Globalization.CultureInfo("vi-VN")) ₫</td>
+                    <td>@totalPayment.ToString("N0", new System.Globalization.CultureInfo("vi-VN")) ₫</td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="https://cdn.jsdelivr.net/npm/autonumeric@4.6.0/dist/autoNumeric.min.js"></script>
+
+    <script>
+        jQuery.validator.methods.number = function (value, element) {
+            value = value.replace(/,/g, '').trim();
+            return this.optional(element) || !isNaN(Number(value));
+        };
+
+        jQuery.validator.methods.range = function (value, element, param) {
+            value = value.replace(/,/g, '').trim();
+            return this.optional(element) || (value >= param[0] && value <= param[1]);
+        };
+
+        new AutoNumeric('.autonumeric', {
+            digitGroupSeparator: ',',
+            decimalCharacter: '.',
+            decimalPlaces: 0,
+            unformatOnSubmit: true
+        });
+
         new AutoNumeric('.autonumeric-decimal', {
             digitGroupSeparator: '',
             decimalCharacter: '.',
