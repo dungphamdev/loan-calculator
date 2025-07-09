@@ -1,33 +1,43 @@
 ﻿@model LoanCalculator.Models.LoanViewModel
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 
 @{
     ViewData["Title"] = "Công cụ tính lãi vay";
 }
 
-<h2>Công cụ tính lãi vay</h2>
+<h2 class="mb-4">Công cụ tính lãi vay</h2>
 
 <form method="post" asp-controller="Loan" asp-action="Loan">
-    <div class="form-group">
-        <label>Số tiền vay (VNĐ)</label>
-        <input asp-for="LoanAmount" class="form-control" />
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="form-group mb-3">
+        <label asp-for="LoanAmount"></label>
+        <input asp-for="LoanAmount" class="form-control text-end autonumeric" placeholder="Ví dụ: 1,000,000" />
+        <span asp-validation-for="LoanAmount" class="text-danger"></span>
     </div>
-    <div class="form-group">
-        <label>Thời gian vay (tháng)</label>
-        <input asp-for="LoanTermMonths" class="form-control" />
+
+    <div class="form-group mb-3">
+        <label asp-for="LoanTermMonths"></label>
+        <input asp-for="LoanTermMonths" class="form-control text-end" placeholder="Số tháng vay" />
+        <span asp-validation-for="LoanTermMonths" class="text-danger"></span>
     </div>
-    <div class="form-group">
-        <label>Lãi suất (% mỗi năm)</label>
-        <input asp-for="AnnualInterestRate" class="form-control" />
+
+    <div class="form-group mb-3">
+        <label asp-for="AnnualInterestRate"></label>
+        <input asp-for="AnnualInterestRate" class="form-control text-end autonumeric-decimal" placeholder="Ví dụ: 8.5" />
+        <span asp-validation-for="AnnualInterestRate" class="text-danger"></span>
     </div>
-    <div class="form-group">
-        <label>Hình thức trả nợ</label>
+
+    <div class="form-group mb-4">
+        <label asp-for="RepaymentType"></label>
         <select asp-for="RepaymentType" class="form-control">
             <option value="">-- Chọn hình thức --</option>
             <option value="EqualPrincipal">Dư nợ giảm dần</option>
-            <option value="Annuity">Trả góp đều (annuity)</option>
+            <option value="Annuity">Trả góp đều (Annuity)</option>
         </select>
+        <span asp-validation-for="RepaymentType" class="text-danger"></span>
     </div>
-    <br />
+
     <button type="submit" class="btn btn-primary">Tính toán</button>
 </form>
 
@@ -35,8 +45,8 @@
 {
     <hr />
     <h4>Bảng chi tiết thanh toán</h4>
-    <table class="table table-bordered">
-        <thead>
+    <table class="table table-bordered table-sm">
+        <thead class="table-light">
             <tr>
                 <th>Tháng</th>
                 <th>Tiền gốc</th>
@@ -50,12 +60,48 @@
             {
                 <tr>
                     <td>@item.Month</td>
-                    <td>@item.Principal.ToString("N0")</td>
-                    <td>@item.Interest.ToString("N0")</td>
-                    <td>@item.TotalPayment.ToString("N0")</td>
-                    <td>@item.RemainingBalance.ToString("N0")</td>
+                    <td>@item.Principal.ToString("N0", new System.Globalization.CultureInfo("en-US"))</td>
+                    <td>@item.Interest.ToString("N0", new System.Globalization.CultureInfo("en-US"))</td>
+                    <td>@item.TotalPayment.ToString("N0", new System.Globalization.CultureInfo("en-US"))</td>
+                    <td>@item.RemainingBalance.ToString("N0", new System.Globalization.CultureInfo("en-US"))</td>
                 </tr>
             }
         </tbody>
     </table>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="https://cdn.jsdelivr.net/npm/autonumeric@4.6.0/dist/autoNumeric.min.js"></script>
+
+    <script>
+        // Patch jQuery Validation to handle formatted numbers
+        // Override number validator
+        jQuery.validator.methods.number = function (value, element) {
+            value = value.replace(/,/g, '').trim();
+            return this.optional(element) || !isNaN(Number(value));
+        };
+
+        // Override range validator
+        jQuery.validator.methods.range = function (value, element, param) {
+            value = value.replace(/,/g, '').trim();
+            return this.optional(element) || (value >= param[0] && value <= param[1]);
+        };
+
+        // Init AutoNumeric for LoanAmount
+        new AutoNumeric('.autonumeric', {
+            digitGroupSeparator: ',',
+            decimalCharacter: '.',
+            decimalPlaces: 0,
+            unformatOnSubmit: true
+        });
+
+        // Init AutoNumeric for AnnualInterestRate
+        new AutoNumeric('.autonumeric-decimal', {
+            digitGroupSeparator: '',
+            decimalCharacter: '.',
+            decimalPlaces: 2,
+            unformatOnSubmit: true
+        });
+    </script>
 }
